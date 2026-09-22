@@ -16,7 +16,7 @@ import { getFirestore } from 'firebase/firestore';
 // Access to vault data is enforced by Firebase Authentication + Firestore Rules;
 // this configuration cannot decrypt vault contents.
 const firebaseConfig = {
-  apiKey: 'AIzaSyBnN3CyfGdFMN-5SE_l5XVRu4xhyWLU0kY',
+  apiKey: 'AIzaSyBnN3CyfGdFMN-5SE_l5XVRu4xhyWLUOkY',
   authDomain: 'personal-vault-103a3.firebaseapp.com',
   projectId: 'personal-vault-103a3',
   storageBucket: 'personal-vault-103a3.firebasestorage.app',
