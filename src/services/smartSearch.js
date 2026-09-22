@@ -40,8 +40,18 @@ function scoreEntry(entry, queryTokens) {
   const url = normalizeSearch(entry.url);
   const username = normalizeSearch(entry.username);
   const notes = normalizeSearch(entry.notes);
+  const financial = normalizeSearch([
+    entry.bankNumber,
+    entry.branchNumber,
+    entry.accountNumber,
+    entry.accountHolder,
+    entry.iban,
+    entry.cardNumber,
+    entry.cardholderName,
+    entry.expiry
+  ].filter(Boolean).join(' '));
   const services = normalizeSearch(serviceSearchTerms(entry).join(' '));
-  const all = `${title} ${url} ${username} ${notes} ${services}`.trim();
+  const all = `${title} ${url} ${username} ${notes} ${financial} ${services}`.trim();
   const words = all.split(' ').filter(Boolean);
 
   let score = 0;
@@ -54,6 +64,7 @@ function scoreEntry(entry, queryTokens) {
     else if (url.includes(token)) score += 30;
     else if (username.includes(token)) score += 25;
     else if (services.includes(token)) score += 20;
+    else if (financial.includes(token)) score += 15;
     else if (notes.includes(token)) score += 10;
     else score += 5;
   }
