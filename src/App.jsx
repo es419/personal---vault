@@ -58,6 +58,14 @@ const AUTO_LOCK_KEY = 'vault.firebase.auto-lock.v1';
 const DEFAULT_AUTO_LOCK = 5 * 60 * 1000;
 const EMPTY_ENTRY = { title: '', username: '', password: '', url: '', notes: '', icon: null };
 
+function hapticFeedback(pattern) {
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(pattern);
+    }
+  } catch {}
+}
+
 function savedTheme() {
   try {
     const value = localStorage.getItem(THEME_KEY);
@@ -392,6 +400,7 @@ export default function App() {
       await deleteEncryptedEntry(user.uid, entry.id, entry.version);
       setDeleteTarget(null);
       await loadVault(vaultKey);
+      hapticFeedback([45, 35, 45]);
       setToast('הרשומה נמחקה');
     } catch (e) {
       if (e instanceof SyncConflictError || e?.code === 'sync-conflict') {
@@ -404,6 +413,7 @@ export default function App() {
   async function copy(text, message = 'הועתק') {
     try {
       await navigator.clipboard.writeText(String(text || ''));
+      hapticFeedback(24);
       setToast(message);
     } catch {
       setToast('לא הצלחתי להעתיק');
