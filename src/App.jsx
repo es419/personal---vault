@@ -56,7 +56,7 @@ import SettingsView, { AUTO_LOCK_OPTIONS, ConfirmDeleteEntry, DeleteVaultDialog 
 const THEME_KEY = 'vault.firebase.theme.v1';
 const AUTO_LOCK_KEY = 'vault.firebase.auto-lock.v1';
 const DEFAULT_AUTO_LOCK = 5 * 60 * 1000;
-const EMPTY_ENTRY = { title: '', username: '', password: '', url: '', notes: '', icon: null };
+const EMPTY_ENTRY = { entryType: 'login', title: '', username: '', password: '', url: '', notes: '', icon: null, bankNumber: '', branchNumber: '', accountNumber: '', accountHolder: '', iban: '', cardNumber: '', cardholderName: '', expiry: '', cvv: '' };
 
 function hapticFeedback(pattern) {
   try {
@@ -378,6 +378,16 @@ export default function App() {
         url: draft.url || '',
         notes: draft.notes || '',
         icon: draft.icon || null,
+        entryType: draft.entryType || 'login',
+        bankNumber: draft.bankNumber || '',
+        branchNumber: draft.branchNumber || '',
+        accountNumber: draft.accountNumber || '',
+        accountHolder: draft.accountHolder || '',
+        iban: draft.iban || '',
+        cardNumber: draft.cardNumber || '',
+        cardholderName: draft.cardholderName || '',
+        expiry: draft.expiry || '',
+        cvv: draft.cvv || '',
         createdAt: draft.createdAt || now,
         updatedAt: now
       });
