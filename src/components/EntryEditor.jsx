@@ -3,10 +3,10 @@ import { detectService } from '../services/catalog.js';
 import { EMOJIS, ServiceIcon, fetchFaviconFromUrl, imageFileToIconData } from '../services/ServiceIcon.jsx';
 import { Field, Modal } from './Common.jsx';
 
-const EMPTY = { title: '', username: '', password: '', url: '', notes: '', icon: null };
+const EMPTY = { entryType: 'login', title: '', username: '', password: '', url: '', notes: '', icon: null, bankNumber: '', branchNumber: '', accountNumber: '', accountHolder: '', iban: '', cardNumber: '', cardholderName: '', expiry: '', cvv: '' };
 
 export default function EntryEditor({ entry, busy, onClose, onSave, onGeneratePassword }) {
-  const [draft, setDraft] = useState({ ...EMPTY, ...entry });
+  const [draft, setDraft] = useState({ ...EMPTY, ...entry, entryType: entry?.entryType || 'login' });
   const [iconOpen, setIconOpen] = useState(false);
   const [localError, setLocalError] = useState('');
   const [fetchingIcon, setFetchingIcon] = useState(false);
@@ -46,8 +46,13 @@ export default function EntryEditor({ entry, busy, onClose, onSave, onGeneratePa
   }
 
   return (
-    <Modal title={draft.id ? 'עריכת סיסמה' : 'סיסמה חדשה'} onClose={busy ? undefined : onClose} wide>
+    <Modal title={draft.id ? 'עריכת רשומה' : 'רשומה חדשה'} onClose={busy ? undefined : onClose} wide>
       <form className="editor-form" onSubmit={(e) => { e.preventDefault(); onSave(draft); }}>
+        <div className="entry-type-selector" role="tablist" aria-label="סוג הרשומה">
+          <button type="button" className={draft.entryType === 'login' ? 'active' : ''} onClick={() => set('entryType', 'login')}>חשבון</button>
+          <button type="button" className={draft.entryType === 'bank' ? 'active' : ''} onClick={() => set('entryType', 'bank')}>חשבון בנק</button>
+          <button type="button" className={draft.entryType === 'card' ? 'active' : ''} onClick={() => set('entryType', 'card')}>כרטיס אשראי</button>
+        </div>
         <div className="icon-editor-row">
           <button type="button" className="icon-preview-button" onClick={() => setIconOpen((v) => !v)}><ServiceIcon entry={draft} size="xl" /><span>שנה אייקון</span></button>
           <div className="icon-detection-text">{detected ? `זוהה: ${detected.label}` : 'אייקון אוטומטי לפי שם/כתובת'}</div>
@@ -75,6 +80,47 @@ export default function EntryEditor({ entry, busy, onClose, onSave, onGeneratePa
         <Field label="סיסמה">
           <div className="input-with-action"><input dir="ltr" type="text" value={draft.password} onChange={(e) => set('password', e.target.value)} autoComplete="off" /><button type="button" onClick={() => set('password', onGeneratePassword())}>צור</button></div>
         </Field>
+        {draft.entryType === 'bank' && (
+          <div className="sensitive-fields-block">
+            <div className="sensitive-fields-title">פרטי חשבון בנק</div>
+            <Field label="מספר בנק">
+              <div className="input-with-action"><input dir="ltr" inputMode="numeric" value={draft.bankNumber} onChange={(e) => set('bankNumber', e.target.value)} autoComplete="off" /><button type="button" onClick={() => navigator.clipboard?.writeText(draft.bankNumber || '')}>העתק</button></div>
+            </Field>
+            <Field label="מספר סניף">
+              <div className="input-with-action"><input dir="ltr" inputMode="numeric" value={draft.branchNumber} onChange={(e) => set('branchNumber', e.target.value)} autoComplete="off" /><button type="button" onClick={() => navigator.clipboard?.writeText(draft.branchNumber || '')}>העתק</button></div>
+            </Field>
+            <Field label="מספר חשבון">
+              <div className="input-with-action"><input dir="ltr" inputMode="numeric" value={draft.accountNumber} onChange={(e) => set('accountNumber', e.target.value)} autoComplete="off" /><button type="button" onClick={() => navigator.clipboard?.writeText(draft.accountNumber || '')}>העתק</button></div>
+            </Field>
+            <Field label="שם בעל החשבון">
+              <input dir="auto" value={draft.accountHolder} onChange={(e) => set('accountHolder', e.target.value)} autoComplete="off" />
+            </Field>
+            <Field label="IBAN / מספר זה"ב">
+              <div className="input-with-action"><input dir="ltr" value={draft.iban} onChange={(e) => set('iban', e.target.value)} autoComplete="off" /><button type="button" onClick={() => navigator.clipboard?.writeText(draft.iban || '')}>העתק</button></div>
+            </Field>
+          </div>
+        )}
+
+        {draft.entryType === 'card' && (
+          <div className="sensitive-fields-block">
+            <div className="sensitive-fields-title">פרטי כרטיס אשראי</div>
+            <Field label="מספר כרטיס">
+              <div className="input-with-action"><input dir="ltr" inputMode="numeric" value={draft.cardNumber} onChange={(e) => set('cardNumber', e.target.value.replace(/[^0-9 ]/g, ''))} placeholder="1234 5678 9012 3456" autoComplete="off" /><button type="button" onClick={() => navigator.clipboard?.writeText(draft.cardNumber || '')}>העתק</button></div>
+            </Field>
+            <Field label="שם בעל הכרטיס">
+              <input dir="auto" value={draft.cardholderName} onChange={(e) => set('cardholderName', e.target.value)} autoComplete="off" />
+            </Field>
+            <div className="field-pair">
+              <Field label="תוקף">
+                <input dir="ltr" inputMode="numeric" value={draft.expiry} onChange={(e) => set('expiry', e.target.value)} placeholder="MM/YY" autoComplete="off" />
+              </Field>
+              <Field label="CVV">
+                <input dir="ltr" inputMode="numeric" value={draft.cvv} onChange={(e) => set('cvv', e.target.value.replace(/\D/g, '').slice(0, 4))} maxLength={4} autoComplete="off" />
+              </Field>
+            </div>
+          </div>
+        )}
+
         <Field label="כתובת אתר">
           <input dir="ltr" inputMode="url" value={draft.url} onChange={(e) => set('url', e.target.value)} placeholder="https://example.com" autoComplete="off" />
         </Field>
