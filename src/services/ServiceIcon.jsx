@@ -5,7 +5,6 @@ const EMOJIS = ['🔐','🎓','💳','🏦','🛒','🎮','🎬','🎵','✈️'
 
 const SPECIAL_SERVICE_ICONS = {
   'haifa-moodle': 'https://magazine.haifa.ac.il/images/color_logo_three_languages.png',
-  mizrahi: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/%D7%9C%D7%95%D7%92%D7%95%20%D7%A9%D7%9C%20%D7%91%D7%A0%D7%A7%20%D7%9E%D7%96%D7%A8%D7%97%D7%99-%D7%98%D7%A4%D7%97%D7%95%D7%AA.svg'
 };
 export { EMOJIS };
 
