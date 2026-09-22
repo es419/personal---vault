@@ -50,7 +50,7 @@ function requirePrf(result) {
   return new Uint8Array(first);
 }
 
-export async function enableQuickUnlock(vaultKey, uid, userLabel = 'Vault') {
+export async function enableQuickUnlock(vaultKey, uid) {
   if (!quickUnlockSupported()) throw new Error('Quick Unlock אינו נתמך בדפדפן הזה');
 
   const prfSalt = randomBytes(32);
@@ -61,7 +61,7 @@ export async function enableQuickUnlock(vaultKey, uid, userLabel = 'Vault') {
     publicKey: {
       challenge,
       rp: { name: 'Vault' },
-      user: { id: userId, name: `vault-${uid}`, displayName: userLabel },
+      user: { id: userId, name: 'vault', displayName: 'Vault' },
       pubKeyCredParams: [
         { type: 'public-key', alg: -7 },
         { type: 'public-key', alg: -257 }
