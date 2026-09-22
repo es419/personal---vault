@@ -170,7 +170,11 @@ function EntryCard({ entry, onEdit, onDelete, onCopy }) {
             <ServiceIcon entry={entry} size="lg" />
             <span className="entry-text">
               <strong>{entry.title || 'ללא שם'}</strong>
-              <small dir="auto">{entry.username || entry.url || (entry.corrupted ? 'לא ניתן לפענח' : 'ללא שם משתמש')}</small>
+              <small dir="auto">{entry.corrupted ? 'לא ניתן לפענח' : entry.entryType === 'bank'
+                ? [entry.branchNumber && `סניף ${entry.branchNumber}`, entry.accountNumber && `חשבון ••••${String(entry.accountNumber).replace(/\s/g, '').slice(-4)}`].filter(Boolean).join(' · ') || entry.username || entry.url || 'חשבון בנק'
+                : entry.entryType === 'card'
+                  ? [entry.cardNumber && `•••• ${String(entry.cardNumber).replace(/\s/g, '').slice(-4)}`, entry.expiry].filter(Boolean).join(' · ') || entry.username || entry.url || 'כרטיס אשראי'
+                  : entry.username || entry.url || 'ללא שם משתמש'}</small>
             </span>
           </button>
         </article>
