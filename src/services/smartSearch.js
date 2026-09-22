@@ -40,15 +40,16 @@ function scoreEntry(entry, queryTokens) {
   const url = normalizeSearch(entry.url);
   const username = normalizeSearch(entry.username);
   const notes = normalizeSearch(entry.notes);
+  const cardTerms = Array.isArray(entry.cards)
+    ? entry.cards.flatMap((card) => [card.cardNumber, card.cardholderName, card.expiry])
+    : [entry.cardNumber, entry.cardholderName, entry.expiry];
   const financial = normalizeSearch([
     entry.bankNumber,
     entry.branchNumber,
     entry.accountNumber,
     entry.accountHolder,
     entry.iban,
-    entry.cardNumber,
-    entry.cardholderName,
-    entry.expiry
+    ...cardTerms
   ].filter(Boolean).join(' '));
   const services = normalizeSearch(serviceSearchTerms(entry).join(' '));
   const all = `${title} ${url} ${username} ${notes} ${financial} ${services}`.trim();
