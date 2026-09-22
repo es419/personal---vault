@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedInAs(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function validVaultDocument() {
+      return request.resource.data.keys().hasOnly([
+          'schemaVersion',
+          'masterSalt',
+          'wrappedVaultKey',
+          'wrappedVaultIv',
+          'recoverySalt',
+          'recoveryWrappedVaultKey',
+          'recoveryWrappedIv',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.masterSalt is string
+        && request.resource.data.masterSalt.size() <= 128
+        && request.resource.data.wrappedVaultKey is string
+        && request.resource.data.wrappedVaultKey.size() <= 512
+        && request.resource.data.wrappedVaultIv is string
+        && request.resource.data.wrappedVaultIv.size() <= 128
+        && request.resource.data.recoverySalt is string
+        && request.resource.data.recoverySalt.size() <= 128
+        && request.resource.data.recoveryWrappedVaultKey is string
+        && request.resource.data.recoveryWrappedVaultKey.size() <= 512
+        && request.resource.data.recoveryWrappedIv is string
+        && request.resource.data.recoveryWrappedIv.size() <= 128
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    function validEntryDocument() {
+      return request.resource.data.keys().hasOnly(['ciphertext', 'iv', 'version', 'updatedAt'])
+        && request.resource.data.ciphertext is string
+        && request.resource.data.ciphertext.size() > 0
+        && request.resource.data.ciphertext.size() <= 700000
+        && request.resource.data.iv is string
+        && request.resource.data.iv.size() <= 128
+        && request.resource.data.version is int
+        && request.resource.data.version >= 1
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /vaults/{uid} {
+      allow read: if signedInAs(uid);
+      allow create: if signedInAs(uid) && validVaultDocument();
+      allow update: if signedInAs(uid)
+        && validVaultDocument()
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if signedInAs(uid);
+
+      match /entries/{entryId} {
+        allow read: if signedInAs(uid);
+        allow create, update: if signedInAs(uid) && entryId.size() <= 100 && validEntryDocument();
+        allow delete: if signedInAs(uid);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

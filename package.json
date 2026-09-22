@@ -1,0 +1,23 @@
+{
+  "name": "vault-firebase-clean",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node tests/crypto-smoke.mjs && node tests/search-smoke.mjs",
+    "check": "node --check src/crypto/kdfWorker.js && node --check src/firebase/client.js && node --check src/firebase/vaultStore.js"
+  },
+  "dependencies": {
+    "firebase": "12.19.0",
+    "hash-wasm": "4.12.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "5.0.2",
+    "vite": "7.1.5"
+  }
+}

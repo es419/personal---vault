@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Moodle אוניברסיטת חיפה">
+  <rect width="64" height="64" rx="14" fill="#ffffff"/>
+  <g fill="none" stroke="#0B2B45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 20.5 29.5 10 51 20.5 29.5 31 8 20.5Z"/>
+    <path d="M16 25.5v12c5 4.6 9.7 6.9 14.2 6.9 4.2 0 8.8-2.1 13.8-6.4V25.5"/>
+    <path d="M51 20.5v13"/>
+    <circle cx="51" cy="37.2" r="2.6"/>
+  </g>
+  <path d="M37.5 34.5 55 42.2l-7.1 2.2 4 8.1-4.4 2.1-4-8.1-5 5.4-1-17.4Z" fill="#19B8E8" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+</svg>
