@@ -56,7 +56,7 @@ import SettingsView, { AUTO_LOCK_OPTIONS, ConfirmDeleteEntry, DeleteVaultDialog 
 const THEME_KEY = 'vault.firebase.theme.v1';
 const AUTO_LOCK_KEY = 'vault.firebase.auto-lock.v1';
 const DEFAULT_AUTO_LOCK = 5 * 60 * 1000;
-const EMPTY_ENTRY = { entryType: 'login', title: '', username: '', password: '', url: '', notes: '', icon: null, bankNumber: '', branchNumber: '', accountNumber: '', accountHolder: '', iban: '', cardNumber: '', cardholderName: '', expiry: '', cvv: '' };
+const EMPTY_ENTRY = { entryType: 'login', title: '', username: '', password: '', url: '', notes: '', icon: null, bankNumber: '', branchNumber: '', accountNumber: '', accountHolder: '', iban: '', cards: [] };
 
 function hapticFeedback(pattern) {
   try {
@@ -378,16 +378,20 @@ export default function App() {
         url: draft.url || '',
         notes: draft.notes || '',
         icon: draft.icon || null,
-        entryType: draft.entryType || 'login',
+        entryType: draft.entryType === 'card' ? 'bank' : (draft.entryType || 'login'),
         bankNumber: draft.bankNumber || '',
         branchNumber: draft.branchNumber || '',
         accountNumber: draft.accountNumber || '',
         accountHolder: draft.accountHolder || '',
         iban: draft.iban || '',
-        cardNumber: draft.cardNumber || '',
-        cardholderName: draft.cardholderName || '',
-        expiry: draft.expiry || '',
-        cvv: draft.cvv || '',
+        cards: Array.isArray(draft.cards)
+          ? draft.cards.map((card) => ({
+              cardNumber: card.cardNumber || '',
+              cardholderName: card.cardholderName || '',
+              expiry: card.expiry || '',
+              cvv: card.cvv || ''
+            }))
+          : [],
         createdAt: draft.createdAt || now,
         updatedAt: now
       });
