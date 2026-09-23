@@ -1,4 +1,10 @@
 const SERVICE_DEFS = [
+  ['studyflow', 'StudyFlow', ['studyflow','study flow','מערכת שעות','לוח זמנים','student-schedule','es419.github.io/student-schedule']],
+  ['pomoapp', 'Pomo', ['pomo','פומו','pomodoro','pomo focus','es419.github.io/pomo']],
+  ['expenseapp', 'פנקס ההוצאות', ['פנקס ההוצאות','אפליקציית הוצאות','expense app','expense-app','es419.github.io/expense-app']],
+  ['attendanceplus', 'נוכחות+', ['נוכחות+','student attendance','student-attendance-app','es419.github.io/student-attendance-app']],
+  ['attendancework', 'נוכחות בעבודה', ['נוכחות בעבודה','attendance app','attendance-app']],
+  ['vaultapp', 'Vault', ['personal vault','personal---vault','הכספת','vault app','es419.github.io/personal---vault']],
   ['haifa-moodle', 'Moodle · אוניברסיטת חיפה', ['moodle','moodle haifa','haifa moodle','מודל','מודל חיפה','מודל אוניברסיטת חיפה'], [/^mw\d+\.haifa\.ac\.il$/i]],
   ['gmail', 'Gmail', ['gmail','גימייל','ג׳ימייל',"ג'ימייל",'mail.google.com','gmail.com']],
   ['youtube', 'YouTube', ['youtube','יוטיוב','youtu.be','youtube.com']],
