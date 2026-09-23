@@ -57,7 +57,7 @@ const THEME_KEY = 'vault.firebase.theme.v1';
 const AUTO_LOCK_KEY = 'vault.firebase.auto-lock.v1';
 const DEFAULT_AUTO_LOCK = 5 * 60 * 1000;
 const EMPTY_ENTRY = { entryType: 'login', title: '', username: '', password: '', url: '', notes: '', icon: null, bankNumber: '', branchNumber: '', accountNumber: '', accountHolder: '', iban: '', cards: [] };
-const EMERGENCY_ENTRY_ID = '__vault_emergency__';
+const EMERGENCY_ENTRY_ID = 'vault-emergency';
 
 function hapticFeedback(pattern) {
   try {
