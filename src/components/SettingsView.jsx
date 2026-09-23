@@ -92,7 +92,7 @@ export function DeleteVaultDialog({ busy, error, onCancel, onDelete }) {
 }
 
 
-export function EmergencyDetailsDialog({ entry, busy, onCancel, onSave, onCopy }) {
+export function EmergencyDetailsDialog({ entry, busy, error, onCancel, onSave, onCopy }) {
   const [masterPassword, setMasterPassword] = useState(entry?.masterPassword || '');
   const [recoveryKey, setRecoveryKey] = useState(entry?.recoveryKey || '');
   const [notes, setNotes] = useState(entry?.notes || '');
@@ -138,6 +138,7 @@ export function EmergencyDetailsDialog({ entry, busy, onCancel, onSave, onCopy }
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows="3" />
       </Field>
 
+      {error && <div className="form-error">{error}</div>}
       <div className="modal-actions">
         <button className="secondary" onClick={onCancel} disabled={busy}>ביטול</button>
         <button className="primary" onClick={() => onSave({ masterPassword, recoveryKey, notes })} disabled={busy}>
