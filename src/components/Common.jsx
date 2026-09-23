@@ -13,7 +13,16 @@ export function CenterScreen({ children }) {
 }
 
 export function Splash({ message = 'פותח את הכספת…' }) {
-  return <CenterScreen><BrandMark /><h1>Vault</h1><p>{message}</p></CenterScreen>;
+  return (
+    <CenterScreen>
+      <div className="splash-loader" aria-hidden="true">
+        <div className="splash-loader-ring" />
+        <BrandMark />
+      </div>
+      <h1 className="splash-title">Vault</h1>
+      <p className="splash-message">{message}</p>
+    </CenterScreen>
+  );
 }
 
 export function Field({ label, hint, children }) {
