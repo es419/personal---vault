@@ -25,7 +25,9 @@ export default function SettingsView({
   onToggleQuick,
   onLock,
   onSignOut,
-  onDeleteVault
+  onDeleteVault,
+  emergencyConfigured,
+  onOpenEmergency
 }) {
   const autoLockLabel = AUTO_LOCK_OPTIONS.find((item) => item.value === autoLockMs)?.label || '5 דקות';
 
@@ -42,6 +44,7 @@ export default function SettingsView({
         <div className="setting-card split"><div><strong>Quick Unlock</strong><small>{quickSupported ? 'Face ID / Windows Hello דרך Passkey PRF במכשיר הזה' : 'לא נתמך בדפדפן הזה'}</small></div><button className={quickEnabled ? 'danger-outline compact' : 'secondary compact'} disabled={busy || !quickSupported} onClick={onToggleQuick}>{quickEnabled ? 'כבה' : 'הפעל'}</button></div>
         <label className="setting-card split setting-select"><div><strong>נעילה אוטומטית</strong><small>ננעל אחרי חוסר פעילות. סגירת האפליקציה תמיד מוציאה את המפתח מהזיכרון.</small></div><select value={autoLockMs} onChange={(e) => onAutoLockChange(Number(e.target.value))}>{AUTO_LOCK_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
         <button className="setting-card action-row" onClick={onLock}><span><strong>נעל עכשיו</strong><small>מוציא את Vault Key מהזיכרון</small></span><b>›</b></button>
+        <button className="setting-card action-row" onClick={onOpenEmergency}><span><strong>פרטי חירום של הכספת</strong><small>{emergencyConfigured ? 'Master Password ו־Recovery Key שמורים כרשומה מוצפנת' : 'שמור עותק מוצפן של פרטי הגישה החשובים'}</small></span><b>›</b></button>
       </section>
 
       <section className="setting-section">
@@ -58,7 +61,7 @@ export default function SettingsView({
         <button className="setting-card action-row danger-text" onClick={onDeleteVault}><span><strong>מחק את הכספת והחשבון</strong><small>מוחק את כל ciphertext מ־Firestore ואת משתמש Firebase</small></span><b>›</b></button>
       </section>
 
-      <div className="settings-footnote">נעילה אוטומטית: {autoLockLabel} · Master Password ו־Recovery Key אינם נשמרים ב־Firebase.</div>
+      <div className="settings-footnote">נעילה אוטומטית: {autoLockLabel} · פרטי חירום, אם נשמרו, נשמרים רק בתוך ciphertext מוצפן.</div>
     </div>
   );
 }
@@ -84,6 +87,63 @@ export function DeleteVaultDialog({ busy, error, onCancel, onDelete }) {
       <Field label="הקלד DELETE לאישור"><input dir="ltr" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} /></Field>
       {error && <div className="form-error">{error}</div>}
       <div className="modal-actions"><button className="secondary" onClick={onCancel} disabled={busy}>ביטול</button><button className="danger-button" disabled={busy || !valid} onClick={() => onDelete(master)}>{busy ? 'מוחק…' : 'מחק לצמיתות'}</button></div>
+    </Modal>
+  );
+}
+
+
+export function EmergencyDetailsDialog({ entry, busy, onCancel, onSave, onCopy }) {
+  const [masterPassword, setMasterPassword] = useState(entry?.masterPassword || '');
+  const [recoveryKey, setRecoveryKey] = useState(entry?.recoveryKey || '');
+  const [notes, setNotes] = useState(entry?.notes || '');
+  const [showMaster, setShowMaster] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
+
+  return (
+    <Modal title="פרטי חירום של הכספת" onClose={busy ? undefined : onCancel}>
+      <div className="warning-box">
+        המידע הזה מוצפן בתוך הכספת. הוא שימושי רק אחרי שהכספת כבר נפתחה, ולכן Recovery Key צריך להישמר גם מחוץ לכספת.
+      </div>
+
+      <Field label="Master Password">
+        <div className="input-with-action">
+          <input
+            type={showMaster ? 'text' : 'password'}
+            value={masterPassword}
+            onChange={(e) => setMasterPassword(e.target.value)}
+            autoComplete="off"
+            spellCheck="false"
+          />
+          <button type="button" onClick={() => setShowMaster((value) => !value)}>{showMaster ? 'הסתר' : 'הצג'}</button>
+        </div>
+      </Field>
+      <button className="secondary compact emergency-copy-button" type="button" disabled={!masterPassword} onClick={() => onCopy(masterPassword, 'Master Password הועתק')}>העתק Master Password</button>
+
+      <Field label="Recovery Key">
+        <div className="input-with-action">
+          <input
+            dir="ltr"
+            type={showRecovery ? 'text' : 'password'}
+            value={recoveryKey}
+            onChange={(e) => setRecoveryKey(e.target.value)}
+            autoComplete="off"
+            spellCheck="false"
+          />
+          <button type="button" onClick={() => setShowRecovery((value) => !value)}>{showRecovery ? 'הסתר' : 'הצג'}</button>
+        </div>
+      </Field>
+      <button className="secondary compact emergency-copy-button" type="button" disabled={!recoveryKey} onClick={() => onCopy(recoveryKey, 'Recovery Key הועתק')}>העתק Recovery Key</button>
+
+      <Field label="הערות" hint="אופציונלי">
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows="3" />
+      </Field>
+
+      <div className="modal-actions">
+        <button className="secondary" onClick={onCancel} disabled={busy}>ביטול</button>
+        <button className="primary" onClick={() => onSave({ masterPassword, recoveryKey, notes })} disabled={busy}>
+          {busy ? 'שומר…' : 'שמור מוצפן'}
+        </button>
+      </div>
     </Modal>
   );
 }
