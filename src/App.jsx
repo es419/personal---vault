@@ -51,12 +51,13 @@ import {
 import VaultView from './components/VaultView.jsx';
 import EntryEditor from './components/EntryEditor.jsx';
 import GeneratorView from './components/GeneratorView.jsx';
-import SettingsView, { AUTO_LOCK_OPTIONS, ConfirmDeleteEntry, DeleteVaultDialog } from './components/SettingsView.jsx';
+import SettingsView, { AUTO_LOCK_OPTIONS, ConfirmDeleteEntry, DeleteVaultDialog, EmergencyDetailsDialog } from './components/SettingsView.jsx';
 
 const THEME_KEY = 'vault.firebase.theme.v1';
 const AUTO_LOCK_KEY = 'vault.firebase.auto-lock.v1';
 const DEFAULT_AUTO_LOCK = 5 * 60 * 1000;
 const EMPTY_ENTRY = { entryType: 'login', title: '', username: '', password: '', url: '', notes: '', icon: null, bankNumber: '', branchNumber: '', accountNumber: '', accountHolder: '', iban: '', cards: [] };
+const EMERGENCY_ENTRY_ID = '__vault_emergency__';
 
 function hapticFeedback(pattern) {
   try {
@@ -97,6 +98,7 @@ export default function App() {
   const [editor, setEditor] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteVaultOpen, setDeleteVaultOpen] = useState(false);
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [pendingCreate, setPendingCreate] = useState(null);
   const [quickEnabled, setQuickEnabled] = useState(false);
   const [theme, setTheme] = useState(savedTheme);
@@ -179,6 +181,7 @@ export default function App() {
     setEditor(null);
     setDeleteTarget(null);
     setDeleteVaultOpen(false);
+    setEmergencyOpen(false);
     setTab('vault');
   }
 
@@ -407,6 +410,36 @@ export default function App() {
     } finally { setBusy(false); }
   }
 
+  async function saveEmergencyDetails(details) {
+    if (!user || !vaultKey) return;
+    setBusy(true); setError('');
+    try {
+      const current = entries.find((entry) => entry.id === EMERGENCY_ENTRY_ID);
+      const baseVersion = Number(current?.version || 0);
+      const encrypted = await encryptEntry(vaultKey, EMERGENCY_ENTRY_ID, {
+        entryType: 'system-emergency',
+        title: 'Vault Emergency',
+        masterPassword: details.masterPassword || '',
+        recoveryKey: details.recoveryKey || '',
+        notes: details.notes || '',
+        updatedAt: Date.now()
+      });
+      await putEncryptedEntry(user.uid, EMERGENCY_ENTRY_ID, encrypted, baseVersion);
+      await loadVault(vaultKey);
+      setEmergencyOpen(false);
+      setToast('פרטי החירום נשמרו מוצפנים');
+    } catch (e) {
+      if (e instanceof SyncConflictError || e?.code === 'sync-conflict') {
+        await loadVault(vaultKey).catch(() => undefined);
+        setError('פרטי החירום השתנו במכשיר אחר. סנכרנתי מחדש — נסה שוב.');
+      } else {
+        setError(e.message || 'שמירת פרטי החירום נכשלה');
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function deleteEntry(entry) {
     if (!user || !vaultKey) return;
     setBusy(true); setError('');
@@ -480,7 +513,9 @@ export default function App() {
     }
   }
 
-  const filteredEntries = useMemo(() => smartSearchEntries(entries, search), [entries, search]);
+  const emergencyEntry = useMemo(() => entries.find((entry) => entry.id === EMERGENCY_ENTRY_ID && !entry.corrupted) || null, [entries]);
+  const regularEntries = useMemo(() => entries.filter((entry) => entry.id !== EMERGENCY_ENTRY_ID), [entries]);
+  const filteredEntries = useMemo(() => smartSearchEntries(regularEntries, search), [regularEntries, search]);
 
   if (phase === 'firebase-setup') return <FirebaseSetupScreen />;
   if (phase === 'boot') return <Splash />;
@@ -501,7 +536,7 @@ export default function App() {
         <ErrorBanner message={error} onClose={() => setError('')} />
         {tab === 'vault' && <VaultView entries={filteredEntries} search={search} setSearch={setSearch} onAdd={() => setEditor({ ...EMPTY_ENTRY })} onEdit={(entry) => !entry.corrupted && setEditor({ ...entry })} onDelete={setDeleteTarget} onCopy={copy} onRefresh={refreshVault} refreshing={refreshing} />}
         {tab === 'generator' && <GeneratorView onCopy={copy} onUse={(password) => { setEditor({ ...EMPTY_ENTRY, password }); setTab('vault'); }} />}
-        {tab === 'settings' && <SettingsView email={user?.email} entryCount={entries.length} quickEnabled={quickEnabled} quickSupported={quickUnlockSupported()} busy={busy} theme={theme} onThemeChange={setTheme} autoLockMs={autoLockMs} onAutoLockChange={setAutoLockMs} onToggleQuick={toggleQuickUnlock} onLock={lockVault} onSignOut={handleSignOut} onDeleteVault={() => { setError(''); setDeleteVaultOpen(true); }} />}
+        {tab === 'settings' && <SettingsView email={user?.email} entryCount={regularEntries.length} quickEnabled={quickEnabled} quickSupported={quickUnlockSupported()} busy={busy} theme={theme} onThemeChange={setTheme} autoLockMs={autoLockMs} onAutoLockChange={setAutoLockMs} onToggleQuick={toggleQuickUnlock} onLock={lockVault} onSignOut={handleSignOut} onDeleteVault={() => { setError(''); setDeleteVaultOpen(true); }} emergencyConfigured={Boolean(emergencyEntry)} onOpenEmergency={() => { setError(''); setEmergencyOpen(true); }} />}
       </main>
 
       <nav className="bottom-nav" aria-label="ניווט">
@@ -513,6 +548,7 @@ export default function App() {
       {editor && <EntryEditor entry={editor} busy={busy} onClose={() => setEditor(null)} onSave={saveEntry} onGeneratePassword={() => generatePassword()} />}
       {deleteTarget && <ConfirmDeleteEntry entry={deleteTarget} busy={busy} onCancel={() => setDeleteTarget(null)} onConfirm={() => deleteEntry(deleteTarget)} />}
       {deleteVaultOpen && <DeleteVaultDialog busy={busy} error={error} onCancel={() => { if (!busy) { setDeleteVaultOpen(false); setError(''); } }} onDelete={deleteVault} />}
+      {emergencyOpen && <EmergencyDetailsDialog entry={emergencyEntry} busy={busy} onCancel={() => { if (!busy) { setEmergencyOpen(false); setError(''); } }} onSave={saveEmergencyDetails} onCopy={copy} />}
       <Toast message={toast} />
     </div>
   );
