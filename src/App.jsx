@@ -99,6 +99,7 @@ export default function App() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteVaultOpen, setDeleteVaultOpen] = useState(false);
   const [emergencyOpen, setEmergencyOpen] = useState(false);
+  const [emergencyError, setEmergencyError] = useState('');
   const [pendingCreate, setPendingCreate] = useState(null);
   const [quickEnabled, setQuickEnabled] = useState(false);
   const [theme, setTheme] = useState(savedTheme);
@@ -182,6 +183,7 @@ export default function App() {
     setDeleteTarget(null);
     setDeleteVaultOpen(false);
     setEmergencyOpen(false);
+    setEmergencyError('');
     setTab('vault');
   }
 
@@ -411,29 +413,39 @@ export default function App() {
   }
 
   async function saveEmergencyDetails(details) {
-    if (!user || !vaultKey) return;
-    setBusy(true); setError('');
+    if (!user || !vaultKey) {
+      setEmergencyError('הכספת לא פתוחה כרגע');
+      return;
+    }
+    setBusy(true);
+    setEmergencyError('');
     try {
       const current = entries.find((entry) => entry.id === EMERGENCY_ENTRY_ID);
       const baseVersion = Number(current?.version || 0);
-      const encrypted = await encryptEntry(vaultKey, EMERGENCY_ENTRY_ID, {
+      const now = Date.now();
+      const payload = {
         entryType: 'system-emergency',
         title: 'Vault Emergency',
         masterPassword: details.masterPassword || '',
         recoveryKey: details.recoveryKey || '',
         notes: details.notes || '',
-        updatedAt: Date.now()
-      });
-      await putEncryptedEntry(user.uid, EMERGENCY_ENTRY_ID, encrypted, baseVersion);
-      await loadVault(vaultKey);
+        updatedAt: now
+      };
+      const encrypted = await encryptEntry(vaultKey, EMERGENCY_ENTRY_ID, payload);
+      const nextVersion = await putEncryptedEntry(user.uid, EMERGENCY_ENTRY_ID, encrypted, baseVersion);
+      setEntries((currentEntries) => [
+        ...currentEntries.filter((entry) => entry.id !== EMERGENCY_ENTRY_ID),
+        { ...payload, id: EMERGENCY_ENTRY_ID, version: nextVersion }
+      ]);
       setEmergencyOpen(false);
+      setEmergencyError('');
       setToast('פרטי החירום נשמרו מוצפנים');
     } catch (e) {
       if (e instanceof SyncConflictError || e?.code === 'sync-conflict') {
         await loadVault(vaultKey).catch(() => undefined);
-        setError('פרטי החירום השתנו במכשיר אחר. סנכרנתי מחדש — נסה שוב.');
+        setEmergencyError('פרטי החירום השתנו במכשיר אחר. סנכרנתי מחדש — נסה שוב.');
       } else {
-        setError(e.message || 'שמירת פרטי החירום נכשלה');
+        setEmergencyError(e.message || 'שמירת פרטי החירום נכשלה');
       }
     } finally {
       setBusy(false);
@@ -536,7 +548,7 @@ export default function App() {
         <ErrorBanner message={error} onClose={() => setError('')} />
         {tab === 'vault' && <VaultView entries={filteredEntries} search={search} setSearch={setSearch} onAdd={() => setEditor({ ...EMPTY_ENTRY })} onEdit={(entry) => !entry.corrupted && setEditor({ ...entry })} onDelete={setDeleteTarget} onCopy={copy} onRefresh={refreshVault} refreshing={refreshing} />}
         {tab === 'generator' && <GeneratorView onCopy={copy} onUse={(password) => { setEditor({ ...EMPTY_ENTRY, password }); setTab('vault'); }} />}
-        {tab === 'settings' && <SettingsView email={user?.email} entryCount={regularEntries.length} quickEnabled={quickEnabled} quickSupported={quickUnlockSupported()} busy={busy} theme={theme} onThemeChange={setTheme} autoLockMs={autoLockMs} onAutoLockChange={setAutoLockMs} onToggleQuick={toggleQuickUnlock} onLock={lockVault} onSignOut={handleSignOut} onDeleteVault={() => { setError(''); setDeleteVaultOpen(true); }} emergencyConfigured={Boolean(emergencyEntry)} onOpenEmergency={() => { setError(''); setEmergencyOpen(true); }} />}
+        {tab === 'settings' && <SettingsView email={user?.email} entryCount={regularEntries.length} quickEnabled={quickEnabled} quickSupported={quickUnlockSupported()} busy={busy} theme={theme} onThemeChange={setTheme} autoLockMs={autoLockMs} onAutoLockChange={setAutoLockMs} onToggleQuick={toggleQuickUnlock} onLock={lockVault} onSignOut={handleSignOut} onDeleteVault={() => { setError(''); setDeleteVaultOpen(true); }} emergencyConfigured={Boolean(emergencyEntry)} onOpenEmergency={() => { setError(''); setEmergencyError(''); setEmergencyOpen(true); }} />}
       </main>
 
       <nav className="bottom-nav" aria-label="ניווט">
@@ -548,7 +560,7 @@ export default function App() {
       {editor && <EntryEditor entry={editor} busy={busy} onClose={() => setEditor(null)} onSave={saveEntry} onGeneratePassword={() => generatePassword()} />}
       {deleteTarget && <ConfirmDeleteEntry entry={deleteTarget} busy={busy} onCancel={() => setDeleteTarget(null)} onConfirm={() => deleteEntry(deleteTarget)} />}
       {deleteVaultOpen && <DeleteVaultDialog busy={busy} error={error} onCancel={() => { if (!busy) { setDeleteVaultOpen(false); setError(''); } }} onDelete={deleteVault} />}
-      {emergencyOpen && <EmergencyDetailsDialog entry={emergencyEntry} busy={busy} onCancel={() => { if (!busy) { setEmergencyOpen(false); setError(''); } }} onSave={saveEmergencyDetails} onCopy={copy} />}
+      {emergencyOpen && <EmergencyDetailsDialog entry={emergencyEntry} busy={busy} error={emergencyError} onCancel={() => { if (!busy) { setEmergencyOpen(false); setEmergencyError(''); } }} onSave={saveEmergencyDetails} onCopy={copy} />}
       <Toast message={toast} />
     </div>
   );
