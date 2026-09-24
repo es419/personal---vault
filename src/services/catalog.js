@@ -11,6 +11,7 @@ const SERVICE_DEFS = [
   ['googledrive', 'Google Drive', ['google drive','גוגל דרייב','דרייב של גוגל','drive.google.com']],
   ['google', 'Google', ['google','גוגל','google.com']],
   ['apple', 'Apple / iCloud', ['apple','אפל','icloud','אייקלאוד','איי קלאוד','apple.com','icloud.com']],
+  ['byd', 'BYD', ['byd','בי וואי די','בי.ווי.די','byd auto','build your dreams','byd.com']],
   ['microsoft', 'Microsoft', ['microsoft','מיקרוסופט','outlook','אאוטלוק','hotmail','הוטמייל','office','אופיס','onedrive','וואן דרייב','live.com','outlook.com','microsoft.com','office.com']],
   ['instagram', 'Instagram', ['instagram','אינסטגרם','instagram.com']],
   ['facebook', 'Facebook', ['facebook','פייסבוק','facebook.com','fb.com']],
